@@ -1,0 +1,29 @@
+version: 0.2
+    
+phases:
+  install:
+    runtime-versions:
+      nodejs: latest
+    commands:
+      - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | head -c 7) 
+  pre_build:
+    commands:
+      - echo Entered the pre_build phase...
+      - echo install kubectl
+      - apt-get install curl -y
+      - curl -LO https://dl.k8s.io/release/v1.20.0/bin/linux/amd64/kubectl
+      - sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+      - chmod +x kubectl
+      - mv ./kubectl /usr/local/bin/kubectl
+      - echo Build files...
+  build:
+    commands:
+      - echo Entered the build phase...
+      - echo Building the Docker image...
+      - aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 258706517898.dkr.ecr.us-east-1.amazonaws.com
+      - docker tag python:latest $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME:$COMMIT_HASH
+  post_build:
+    commands:
+      - echo Entered the post_build phase...
+      - echo Pushing the Docker image...
+      - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME:$COMMIT_HASH
