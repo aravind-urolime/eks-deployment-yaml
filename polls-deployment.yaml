@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: polls-app
+  labels:
+    app: polls
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: polls
+  template:
+    metadata:
+      labels:
+        app: polls
+    spec:
+      imagePullSecrets:
+      - name: regcred
+      containers:
+        - image: 258706517898.dkr.ecr.us-east-1.amazonaws.com/python:latest
+          name: polls
+          envFrom:
+          - secretRef:
+              name: polls-secret
+          - configMapRef:
+              name: polls-config
+          ports:
+            - containerPort: 8000
+              name: gunicorn
